@@ -111,6 +111,7 @@ process_message :: (using ctags: *CTags, message: *Message) {
 			if it.scope_file {
 				print_to_builder(*builder, "\tfile:");
 			}
+			print_to_builder(*builder, "\tlanguage:jai");
 			print_to_builder(*builder, "\n");
 		}
 
