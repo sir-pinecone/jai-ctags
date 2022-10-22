@@ -38,6 +38,7 @@ CTags :: struct {
 
 	symbols: [..] *Symbol;
 	strings: [..] string;  // Strings that need to be freed.
+    seen_error: bool;
 }
 
 // You have to call this in your message loop
@@ -74,8 +75,11 @@ process_message :: (using ctags: *CTags, message: *Message) {
                 add_symbol(*symbols, filename, it.name, it, .VARIABLE, 0, decl.header.name);
             }
         }
-
-	} else if message.kind == .COMPLETE {
+    } else if message.kind == .ERROR {
+        // bail - don't write the file if there are errors!
+        seen_error = true;
+        print("Skipping ctags generation due to compile error");
+	} else if message.kind == .COMPLETE && !seen_error {
 		print("Generating ctags file '%' (% symbols)\n", output_filename, symbols.count);
 
 		intro_sort(symbols, (a: *CTags.Symbol, b: *CTags.Symbol) -> int {
@@ -256,3 +260,4 @@ add_declaration :: (using ctags: *CTags, decl: *Code_Declaration) {
 #import "File";
 #import "Basic";
 
+// vim: ts=4 sw=4 et
