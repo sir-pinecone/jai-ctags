@@ -131,7 +131,7 @@ reset :: (using ctags: *CTags) {
 }
 
 // Example build function (but you probably want to roll your own)
-build_ctags :: (filename: string, build_exe := true) {
+build_ctags :: (filename: string, import_dir: [] string = .[], build_exe := true) {
 	#if #run (get_current_workspace() != 2) return;
 
     set_build_options_dc(.{do_output = false});
@@ -141,6 +141,14 @@ build_ctags :: (filename: string, build_exe := true) {
     copy_commonly_propagated_fields(get_build_options(), *build_options);
     build_options.output_type = ifx build_exe then Build_Options.output_type.EXECUTABLE else .NO_OUTPUT;
     build_options.output_executable_name = basename(filename);
+
+    if import_dir {
+        import_path: [..] string;
+        array_add(*import_path, ..import_dir);
+        array_add(*import_path, ..build_options.import_path);
+        build_options.import_path = import_path;
+    }
+
 	set_build_options(build_options, w);
 
 	compiler_begin_intercept(w);
