@@ -78,7 +78,7 @@ process_message :: (using ctags: *CTags, message: *Message) {
     } else if message.kind == .ERROR {
         // bail - don't write the file if there are errors!
         seen_error = true;
-        print("Skipping ctags generation due to compile error");
+        print("Skipping ctags generation due to compile error\n");
 	} else if message.kind == .COMPLETE && !seen_error {
 		print("Generating ctags file '%' (% symbols)\n", output_filename, symbols.count);
 
