@@ -131,7 +131,7 @@ reset :: (using ctags: *CTags) {
 }
 
 // Example build function (but you probably want to roll your own)
-build_ctags :: (filename: string, import_dir: [] string = .[], build_exe := true) {
+build_ctags :: (filename: string, import_dir: [] string = .[], build_exe := true, build_path := "", exe_name := "") {
 	#if #run (get_current_workspace() != 2) return;
 
     set_build_options_dc(.{do_output = false});
@@ -140,7 +140,15 @@ build_ctags :: (filename: string, import_dir: [] string = .[], build_exe := true
 	build_options := get_build_options(w);
     copy_commonly_propagated_fields(get_build_options(), *build_options);
     build_options.output_type = ifx build_exe then Build_Options.output_type.EXECUTABLE else .NO_OUTPUT;
-    build_options.output_executable_name = basename(filename);
+    build_options.output_path = build_path;
+    build_options.output_executable_name = ifx exe_name else basename(filename);
+
+    want_optimized := !build_options.stack_trace;
+    if want_optimized {
+        set_optimization(*build_options, .VERY_OPTIMIZED);
+    } else {
+        set_optimization(*build_options, .DEBUG);
+    }
 
     if import_dir {
         import_path: [..] string;
