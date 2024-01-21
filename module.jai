@@ -55,9 +55,10 @@ process_message :: (using ctags: *CTags, message: *Message) {
             decl := tc.expression;
 
             filename := get_filename(decl);
-            if base_path && begins_with(filename, base_path) {
-                filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
-            }
+            // @campo Store full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
+            //if base_path && begins_with(filename, base_path) {
+            //    filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
+            //}
             if transform_path {
                 filename = transform_path(ctags, filename);
             }
@@ -212,9 +213,10 @@ add_declaration :: (using ctags: *CTags, decl: *Code_Declaration) {
     }
 
     filename := get_filename(decl);
-    if base_path && begins_with(filename, base_path) {
-        filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
-    }
+    // @campo Store full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
+    //if base_path && begins_with(filename, base_path) {
+    //    filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
+    //}
     if transform_path {
         filename = transform_path(ctags, filename);
     }
