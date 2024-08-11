@@ -13,7 +13,13 @@ CTags :: struct {
 	base_path: string;
 
 	// If you need to convert the declarations’ paths for some reason
-	transform_path: (ctags: *CTags, path: string) -> string;
+	//
+	// @campo suppress a bug in my vim ctrlp plugin by always using absolute unix paths even on a windows host.
+	// The issue is triggered by the Windwos drive letter part, such as "z:" - having this can trigger
+	// a ctrlp bug when doing a tag search which results in the file path being corrupted due to a unix drive
+	// format being prepended, e.g. tries to open "/z/z:/path/to/tag". Maybe one day I'll fix ctrlp and remove
+	// this complexity.
+	transform_path: (ctags: *CTags, path: string) -> string = windows_to_unix_path_transform;
 
 	Symbol :: struct {
 		name: string;
@@ -55,7 +61,7 @@ process_message :: (using ctags: *CTags, message: *Message) {
             decl := tc.expression;
 
             filename := get_filename(decl);
-            // @campo Store full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
+            // @campo Use the full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
             //if base_path && begins_with(filename, base_path) {
             //    filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
             //}
@@ -213,7 +219,7 @@ add_declaration :: (using ctags: *CTags, decl: *Code_Declaration) {
     }
 
     filename := get_filename(decl);
-    // @campo Store full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
+    // @campo Use the full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
     //if base_path && begins_with(filename, base_path) {
     //    filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
     //}
@@ -271,6 +277,38 @@ add_declaration :: (using ctags: *CTags, decl: *Code_Declaration) {
     }
 }
 
+// @campo
+// Mostly a copy pasta of the one from the string module except I'm tweaking it
+// to not look for a slash, since you don't always get one (e.g. MinGW turns
+// /z/ or z:\\ into just 'z:'). Also checking for an alpha character at the
+// start.
+is_an_absolute_path :: (path: string) -> bool, enum { NONE; UNIX; WINDOWS; } {
+    if !path return false, .NONE;
+
+    if path[0] == #char "/"  return true, .UNIX;
+    if path[0] == #char "\\" return true, .UNIX;
+
+    #if OS == .WINDOWS {
+        if path.count >= 2 {
+            if is_alpha(path[0]) && (path[1] == #char ":") return true, .WINDOWS;
+        }
+    }
+
+    return false, .NONE;
+}
+
+windows_to_unix_path_transform :: (ctags: *CTags, path: string) -> string {
+    absolute, path_type := is_an_absolute_path(path);
+    if absolute && (path_type == .WINDOWS) {
+        s := alloc_string(path.count,, temp);
+        s[0] = #char "/";
+        s[1] = path[0];
+        memcpy(s.data + 2, path.data + 2, path.count - 2);
+        #if OS == .WINDOWS  path_overwrite_separators(s, #char "/");
+        return s;
+    }
+    return path;
+}
 
 #import "Compiler";
 #import "String";
