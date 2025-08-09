@@ -10,9 +10,12 @@
 
 CTags :: struct {
 	output_filename := "tags";
+
+	// @campo The tag file will use full paths when base_path is empty.
+	// I need that so that my custom ctrlp tag search in vim can filter out duplicates when searching multiple jai tag files.
 	base_path: string;
 
-	// If you need to convert the declarations’ paths for some reason
+	// If you need to convert the declarations’ paths for some reason.
 	//
 	// @campo suppress a bug in my vim ctrlp plugin by always using absolute unix paths even on a windows host.
 	// The issue is triggered by the Windwos drive letter part, such as "z:" - having this can trigger
@@ -61,10 +64,10 @@ process_message :: (using ctags: *CTags, message: *Message) {
             decl := tc.expression;
 
             filename := get_filename(decl);
-            // @campo Use the full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
-            //if base_path && begins_with(filename, base_path) {
-            //    filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
-            //}
+            if base_path && begins_with(filename, base_path) {
+                while ends_with(base_path, "/") base_path.count -= 1; // We expect Unix-like path separators on Windows.
+                filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
+            }
             if transform_path {
                 filename = transform_path(ctags, filename);
             }
@@ -219,10 +222,10 @@ add_declaration :: (using ctags: *CTags, decl: *Code_Declaration) {
     }
 
     filename := get_filename(decl);
-    // @campo Use the full path in tag file so that custom ctrlp tag search can remove duplicates when searching multiple jai tag files.
-    //if base_path && begins_with(filename, base_path) {
-    //    filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
-    //}
+    if base_path && begins_with(filename, base_path) {
+        while ends_with(base_path, "/") base_path.count -= 1; // We expect Unix-like path separators on Windows.
+        filename = slice(filename, base_path.count + 1, filename.count - base_path.count - 1);
+    }
     if transform_path {
         filename = transform_path(ctags, filename);
     }
