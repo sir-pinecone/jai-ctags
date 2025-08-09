@@ -300,7 +300,7 @@ is_an_absolute_path :: (path: string) -> bool, enum { NONE; UNIX; WINDOWS; } {
 windows_to_unix_path_transform :: (ctags: *CTags, path: string) -> string {
     absolute, path_type := is_an_absolute_path(path);
     if absolute && (path_type == .WINDOWS) {
-        s := alloc_string(path.count,, temp);
+        s := alloc_string(path.count);
         s[0] = #char "/";
         s[1] = path[0];
         memcpy(s.data + 2, path.data + 2, path.count - 2);
